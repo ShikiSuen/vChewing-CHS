@@ -19,7 +19,7 @@ import Tekkon
 /// 被封裝的「與 Megrez 組字引擎和 Tekkon 注拼引擎對接的」各種工具函式。
 /// 注意：不要把 composer 注拼槽與 compositor 組字器這兩個概念搞混。
 
-public protocol InputHandlerProtocol {
+public protocol InputHandlerProtocol: AnyObject {
   var currentLM: LMAssembly.LMInstantiator { get set }
   var session: (SessionProtocol & CtlCandidateDelegate)? { get set }
   var keySeparator: String { get }
@@ -65,26 +65,6 @@ extension InputHandlerProtocol {
       preConsolidate: preConsolidate, skipObservation: false
     )
   }
-}
-
-// MARK: - SessionProtocol
-
-/// InputHandler 委任協定
-public protocol SessionProtocol {
-  var isASCIIMode: Bool { get }
-  var isVerticalTyping: Bool { get }
-  var selectionKeys: String { get }
-  var state: IMEStateProtocol { get set }
-  var clientBundleIdentifier: String { get }
-  var clientMitigationLevel: Int { get }
-  @discardableResult
-  func updateVerticalTypingStatus() -> NSRect
-  func switchState(_ newState: IMEStateProtocol)
-  func candidateController() -> CtlCandidateProtocol?
-  func candidateSelectionConfirmedByInputHandler(at index: Int)
-  func setInlineDisplayWithCursor()
-  func updatePopupDisplayWithCursor()
-  func performUserPhraseOperation(addToFilter: Bool) -> Bool
 }
 
 // MARK: - InputHandler
@@ -226,7 +206,7 @@ public class InputHandler: InputHandlerProtocol {
   }
 
   public func previewCompositionBufferForCandidate(at index: Int) {
-    guard var session = session, session.state.type == .ofCandidates,
+    guard let session = session, session.state.type == .ofCandidates,
           (0 ..< session.state.candidates.count).contains(index)
     else {
       return
